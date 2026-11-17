@@ -15,10 +15,11 @@ return [
     |--------------------------------------------------------------------------
      */
 
-    'use_package_routes'       => true,
+    // Rute dipasang sendiri di routes/web.php (/laravel-filemanager, khusus admin CMS)
+    'use_package_routes'       => false,
 
     //Middlewares to be applied to default routes when use_package_routes is true
-    'middlewares'              => ['web'],
+    'middlewares'              => ['web', \App\Http\Middleware\cmslogin::class . ':admin'],
 
     //The url prefix to this package.
     'url_prefix'               => 'filemanager',

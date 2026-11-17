@@ -19,7 +19,6 @@ class PageAccount extends Component
     public $nama;
     public $email;
     public $password;
-    public $password_text;
     public $role = 'admin';
     public $status = 'Y';
 
@@ -46,7 +45,6 @@ class PageAccount extends Component
         $this->nama = '';
         $this->email = '';
         $this->password = '';
-        $this->password_text = '';
         $this->role = 'admin';
         $this->status = 'Y';
     }
@@ -69,7 +67,6 @@ class PageAccount extends Component
         $this->email = $data->email;
         $this->role = $data->role;
         $this->status = $data->status;
-        $this->password_text = $data->password_text;
         $this->password = '';
 
         $this->modalType = 'view';
@@ -83,22 +80,23 @@ class PageAccount extends Component
 
     public function save()
     {
+        // Email dipakai untuk login, jadi tidak boleh kembar. Password minimal 8 karakter.
         $this->validate([
             'nama' => 'required|string|max:255',
-            'email' => 'required|email',
+            'email' => 'required|email|unique:accounts,email' . ($this->modalType === 'edit' ? ',' . (int) $this->accountId : ''),
+            'password' => ($this->modalType === 'create' ? 'required' : 'nullable') . '|string|min:8',
+        ], [
+            'email.unique' => 'Email ini sudah dipakai akun lain.',
+            'password.min' => 'Password minimal 8 karakter.',
         ]);
 
         if ($this->modalType === 'create') {
-
-            $this->validate([
-                'password' => 'required|min:5'
-            ]);
 
             DB::table('accounts')->insert([
                 'nama' => $this->nama,
                 'email' => $this->email,
                 'password' => Hash::make($this->password),
-                'password_text' => $this->password,
+                'password_text' => null,
                 'role' => $this->role,
                 'status' => $this->status,
                 'created_at' => now(),
@@ -118,7 +116,7 @@ class PageAccount extends Component
 
             if (!empty($this->password)) {
                 $updateData['password'] = Hash::make($this->password);
-                $updateData['password_text'] = $this->password;
+                $updateData['password_text'] = null;
             }
 
             DB::table('accounts')

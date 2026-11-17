@@ -14,6 +14,11 @@
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
+/* Dropdown Alpine tidak sempat berkedip terbuka sebelum Alpine berjalan */
+[x-cloak] {
+    display: none !important;
+}
+
 .poppins-thin {
     font-family: "Poppins", sans-serif;
     font-weight: 100;

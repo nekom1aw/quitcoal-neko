@@ -10,9 +10,14 @@
         tinymce.init({
     selector: '#' + editorId,
                                 plugins: 'advlist anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount code fullscreen insertdatetime help preview',
-                                toolbar: 'undo redo | styles | addImage | addVideo | addBorderMerah | addSlider | bold italic underline strikethrough forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media table | code removeformat | fullscreen preview',
+                                toolbar: 'undo redo | styles | addImage | addVideo | addGrafik | addBorderMerah | addSlider | bold italic underline strikethrough forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media table | code removeformat | fullscreen preview',
                                 extended_valid_elements: 'iframe[src|width|height|frameborder|allowfullscreen|style|class|loading|referrerpolicy]',
                                 verify_html: false,
+
+                                // Tautan/gambar/iframe di situs ini disimpan sebagai /jalur (tanpa host dan tidak relatif
+                                // ke halaman CMS), supaya tetap benar di halaman publik mana pun dan di domain lain
+                                relative_urls: false,
+                                remove_script_host: true,
                                 forced_root_block: '',
                                 allow_html_in_named_anchor: true,
                                 cleanup: false,
@@ -23,7 +28,9 @@
                                 paste_enable_default_filters: false,
                                 paste_as_text: false,
 
-                                content_style: 'iframe { width:100%; height:400px; }',
+                                // Embed (iframe) selebar kolom; TinyMCE membungkusnya dengan span inline-block yang
+                                // membuat lebar 100% jatuh ke 300px. Tinggi 400px hanya untuk iframe tanpa atribut height.
+                                content_style: '.mce-preview-object.mce-object-iframe { display: block; width: 100%; margin: 0; } iframe { width: 100%; } iframe:not([height]) { height: 400px; }',
 
                                 font_size_formats: '8pt 10pt 12pt 14pt 16pt 18pt 24pt 36pt 48pt',
                                 menubar: 'file edit view insert format tools table',
@@ -47,6 +54,18 @@
                                 br_in_pre: false,
                                 entity_encoding: 'raw',
                                 setup(editor) {
+                                           // Grafik Data & Grafik di dalam editor mengirim tinggi isinya (lihat grafik/tampil);
+                                           // hanya tampilan di editor yang diubah, atribut height di konten tetap
+                                           editor.on('init', () => {
+                                               editor.getWin().addEventListener('message', (e) => {
+                                                   const tinggi = e.data?.grafikQC?.tinggi;
+                                                   if (!Number.isFinite(tinggi)) return;
+                                                   for (const bingkai of editor.getDoc().querySelectorAll('iframe')) {
+                                                       if (bingkai.contentWindow === e.source) bingkai.style.height = Math.min(Math.max(tinggi, 100), 2000) + 'px';
+                                                   }
+                                               });
+                                           });
+
                                            editor.on('init', () => {
     setTimeout(() => {
         const value = @this.get('{{ $model }}');
@@ -74,6 +93,26 @@ editor.on('change keyup blur', () => {
                                             `);
                                         }
                                     }); --}}
+
+                                    // Grafik terbit dari menu Data & Grafik, dipilih di jendela cms.grafik.pilih
+                                    editor.ui.registry.addButton('addGrafik', {
+                                        text: '+ Tambah Grafik',
+                                        tooltip: 'Sisipkan grafik dari menu Data & Grafik',
+                                        onAction: function () {
+                                            editor.windowManager.openUrl({
+                                                title: 'Sisipkan grafik dari Data & Grafik',
+                                                url: '{{ route('cms.grafik.pilih', ['locale' => app()->getLocale()]) }}',
+                                                width: Math.min(window.innerWidth * 0.8, 1100),
+                                                height: window.innerHeight * 0.8,
+                                                onMessage: (api, pesan) => {
+                                                    if (pesan.mceAction !== 'pilihGrafik') return;
+                                                    const g = pesan.grafik;
+                                                    editor.insertContent(`<p><iframe src='/grafik/${Number(g.id)}' title='${editor.dom.encode(g.judul)}' width='100%' height='${Number(g.tinggi)}' style='border: 0;' loading='lazy'></iframe></p>`);
+                                                    api.close();
+                                                },
+                                            });
+                                        }
+                                    });
 
                                     editor.ui.registry.addButton('addVideo', {
                                         text: '+ Tambah Video',

@@ -8,6 +8,7 @@ use UniSharp\LaravelFilemanager\Lfm;
 use App\Http\Middleware\Auth as MustLogin;
 use App\Http\Middleware\cmslogin;
 use App\Http\Controllers\PltuServiceController;
+use App\Http\Controllers\GrafikController;
 
 
 Route::get('/pltu/login', [CmsController::class, 'login'])->name('login');
@@ -24,6 +25,22 @@ Route::get('/kota-bounds/{nama}', [PltuServiceController::class, 'getKotaBounds'
 Route::get('/kota-cql-filter/{provinsi}', [PltuServiceController::class, 'getKotaCqlFilterByProvinsi']);
 Route::get('/pltu-marker-kota/{kota}', [PltuServiceController::class, 'getPltuMarkerByKota']);
 Route::get('/geojson-indonesia', [PltuServiceController::class, 'getIndonesiaPolygon']);
+Route::get('/batas-pulau', [PltuServiceController::class, 'getBatasPulau']);
+Route::get('/wilayah-di-titik', [PltuServiceController::class, 'getWilayahDiTitik']);
+Route::get('/wilayah-anak', [PltuServiceController::class, 'getWilayahAnak']);
+Route::get('/wilayah-provinsi', [PltuServiceController::class, 'getWilayahProvinsi']);
+Route::get('/wilayah-garis', [PltuServiceController::class, 'getWilayahGaris']);
+Route::get('/kecamatan-turunan', [PltuServiceController::class, 'getKecamatanTurunanDiArea']);
+
+// Grafik dari menu Data & Grafik yang sudah diterbitkan (untuk embed)
+Route::get('/grafik/{id}', [GrafikController::class, 'tampil'])->whereNumber('id')->name('grafik.tampil');
+Route::get('/storage/batas-tiles/{lapisan}/{z}/{x}/{y}', [PltuServiceController::class, 'getBatasTile'])
+    ->where([
+        'lapisan' => '[1-6]-(utama|induk)',
+        'z' => '[0-9]|1[0-9]|20',
+        'x' => '[0-9]+',
+        'y' => '[0-9]+(@2x)?\.png',
+    ]);
 
 
 Route::get('/desa-centroid-kota/{kota}', [PltuServiceController::class, 'getDesaCentroidByKota']);
@@ -38,8 +55,10 @@ Route::fallback(function () {
 });
 
 
+// File manager editor konten (TinyMCE): hanya admin CMS yang login
 Route::group([
     'prefix' => 'laravel-filemanager',
+    'middleware' => [cmslogin::class . ':admin'],
 ], function () {
     Lfm::routes();
 });
@@ -256,6 +275,17 @@ Route::middleware(LanguageMiddleware::class)
 
         Route::get('/data/check-pltu/edit/{id}', [CmsController::class, 'checkpltuEdit'])
             ->name('data.check-pltu.edit');
+
+        // Data & Grafik
+        Route::get('/grafik', [CmsController::class, 'grafikIndex'])
+            ->name('grafik.index');
+        Route::get('/grafik/insert', [CmsController::class, 'grafikInsert'])
+            ->name('grafik.insert');
+        // Pemilih grafik untuk tombol "+ Tambah Grafik" di editor konten (TinyMCE)
+        Route::get('/grafik/pilih', [CmsController::class, 'grafikPilih'])
+            ->name('grafik.pilih');
+        Route::get('/grafik/edit/{id}', [CmsController::class, 'grafikEdit'])
+            ->name('grafik.edit');
 
         Route::get('/pltu/detail', [CmsController::class, 'detailpltuIndex'])
             ->name('detail-pltu.index');

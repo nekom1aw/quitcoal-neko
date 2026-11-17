@@ -56,6 +56,54 @@ class CmsController extends Controller
         return view("cms.pageeditngopini", compact('id'));
     }
 
+    //Data & Grafik
+    public function grafikIndex()
+    {
+        return view("cms.page-index-grafik");
+    }
+
+    // Tanpa ?template=...: galeri pilihan jenis grafik; dengan template: editor berisi contoh datanya
+    public function grafikInsert()
+    {
+        $contoh = \App\Livewire\Cms\PageFormGrafik::contoh();
+        $template = request()->query('template');
+        if (!is_string($template) || !array_key_exists($template, $contoh)) {
+            return view("cms.page-galeri-grafik", compact('contoh'));
+        }
+
+        return view("cms.page-form-grafik", compact('template'));
+    }
+
+    public function grafikEdit($locale, $id)
+    {
+        return view("cms.page-form-grafik", compact('id'));
+    }
+
+    // Dibuka di jendela TinyMCE; hanya grafik terbit yang bisa di-embed
+    public function grafikPilih()
+    {
+        $daftar = \Illuminate\Support\Facades\DB::table('grafik')
+            ->where('terbit', true)
+            ->orderByDesc('updated_at')
+            ->orderByDesc('id')
+            ->get();
+
+        foreach ($daftar as $item) {
+            $pengaturan = \App\Livewire\Cms\PageFormGrafik::bersihkanPengaturan(json_decode($item->pengaturan, true));
+            $item->spek = [
+                'jenis' => $item->jenis,
+                'data' => json_decode($item->data, true),
+                'pengaturan' => $pengaturan,
+            ];
+            $item->tinggiEmbed = $pengaturan['tinggi'] + 170;
+        }
+
+        return view('cms.page-pilih-grafik', [
+            'daftar' => $daftar,
+            'pilihanJenis' => \App\Livewire\Cms\PageFormGrafik::JENIS,
+        ]);
+    }
+
     //Aktivitas
     public function activityIndex()
     {

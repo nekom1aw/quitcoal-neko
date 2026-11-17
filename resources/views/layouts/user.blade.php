@@ -8,7 +8,6 @@
 
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="/vendor/laravel-filemanager/js/stand-alone-button.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
@@ -35,6 +34,17 @@
 
     @livewireScripts
     @stack('scripts')
+
+    <script>
+        // Grafik dari menu Data & Grafik yang di-embed di konten mengirim tinggi isinya (lihat grafik/tampil)
+        window.addEventListener("message", (e) => {
+            const tinggi = e.data?.grafikQC?.tinggi;
+            if (!Number.isFinite(tinggi)) return;
+            for (const bingkai of document.querySelectorAll("iframe")) {
+                if (bingkai.contentWindow === e.source) bingkai.style.height = Math.min(Math.max(tinggi, 100), 2000) + "px";
+            }
+        });
+    </script>
 
 
 

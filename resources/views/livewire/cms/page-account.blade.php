@@ -83,23 +83,14 @@
                        wire:model="nama"
                        class="w-full border px-3 py-2"
                        @disabled($modalType === 'view')>
+                @error('nama') <p class="-mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
 
                 {{-- Email --}}
                 <input type="email"
                        wire:model="email"
                        class="w-full border px-3 py-2"
                        @disabled($modalType === 'view')>
-
-                {{-- Password Saat Ini (Hanya Saat Edit) --}}
-                @if($modalType === 'edit')
-                    <div>
-                        <label class="text-xs text-gray-500">Password Saat Ini</label>
-                        <input type="text"
-                               value="{{ $password_text }}"
-                               class="w-full border px-3 py-2 bg-gray-100"
-                               readonly>
-                    </div>
-                @endif
+                @error('email') <p class="-mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
 
                 {{-- Password Baru (Create & Edit) --}}
                 @if($modalType !== 'view')
@@ -107,6 +98,7 @@
                            wire:model="password"
                            placeholder="{{ $modalType === 'edit' ? 'Password Baru (Kosongkan jika tidak diganti)' : 'Password' }}"
                            class="w-full border px-3 py-2">
+                    @error('password') <p class="-mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
                 @endif
 
                 {{-- Role --}}

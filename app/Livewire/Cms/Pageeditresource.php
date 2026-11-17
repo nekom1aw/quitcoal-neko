@@ -63,16 +63,18 @@ class Pageeditresource extends Component
         $fileEnPath = $this->old_file_en;
 
         if ($this->file_id) {
+            // Penanda waktu supaya tidak menimpa PDF resource lain yang namanya sama (seperti saat tambah)
             $name = $this->file_name_id
-                ? Str::slug($this->file_name_id) . '.pdf'
+                ? Str::slug($this->file_name_id) . '-' . time() . '.pdf'
                 : time() . '_id.pdf';
 
             $fileIdPath = $this->file_id->storeAs('resources', $name, 'public');
         }
 
         if ($this->file_en) {
+            // Penanda waktu supaya tidak menimpa PDF resource lain yang namanya sama (seperti saat tambah)
             $name = $this->file_name_en
-                ? Str::slug($this->file_name_en) . '.pdf'
+                ? Str::slug($this->file_name_en) . '-' . time() . '.pdf'
                 : time() . '_en.pdf';
 
             $fileEnPath = $this->file_en->storeAs('resources', $name, 'public');

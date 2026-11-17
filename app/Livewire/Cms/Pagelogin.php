@@ -16,7 +16,7 @@ class Pagelogin extends Component
 
     protected $rules = [
         'email' => 'required|email',
-        'password' => 'required|min:6',
+        'password' => 'required|string',
     ];
 
     public function mount()
@@ -30,10 +30,13 @@ class Pagelogin extends Component
     {
         $this->validate();
 
+        // Batas percobaan gagal: 5 kali per menit untuk satu email dari satu IP, dan 20 kali per menit
+        // untuk satu IP (menebak banyak email sekaligus)
         $throttleKey = Str::lower($this->email) . '|' . request()->ip();
+        $throttleIp = 'login-ip|' . request()->ip();
 
-        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
-            $seconds = RateLimiter::availableIn($throttleKey);
+        if (RateLimiter::tooManyAttempts($throttleKey, 5) || RateLimiter::tooManyAttempts($throttleIp, 20)) {
+            $seconds = max(RateLimiter::availableIn($throttleKey), RateLimiter::availableIn($throttleIp));
             $this->addError('email', "Terlalu banyak percobaan. Coba lagi dalam {$seconds} detik.");
             return;
         }
@@ -42,13 +45,18 @@ class Pagelogin extends Component
             ->where('email', $this->email)
             ->first();
 
-        if (!$user) {
-            $this->addError('email', 'Email tidak ditemukan.');
+        // Pesan yang sama untuk email tidak terdaftar dan password salah, supaya daftar email
+        // akun tidak bisa ditebak dari pesan login
+        if (!$user || !Hash::check($this->password, $user->password)) {
+            RateLimiter::hit($throttleKey, 60);
+            RateLimiter::hit($throttleIp, 60);
+            $this->addError('email', 'Email atau password salah.');
             return;
         }
 
-        if (!Hash::check($this->password, $user->password)) {
-            $this->addError('password', 'Password salah.');
+        // Akun berstatus Nonaktif (N) di menu Account tidak bisa masuk
+        if ($user->status !== 'Y') {
+            $this->addError('email', 'Akun ini dinonaktifkan. Hubungi admin.');
             return;
         }
 

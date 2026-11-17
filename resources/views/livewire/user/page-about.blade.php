@@ -1,29 +1,22 @@
-<div class="max-w-2xl mx-auto py-10 px-10">
+<div class="mx-auto max-w-3xl px-6 py-10 sm:px-10">
 
     @if($about)
 
-        <h1 class="text-2xl font-bold mb-6">
-            {{ app()->getLocale() === 'id'
-                ? $about->title_id
-                : $about->title_en
-            }}
-        </h1>
-
-        @if(!empty($about->image))
-            <div class="mb-6">
-                <img
-                    src="{{ $about->image }}"
-                    alt="About image"
-                    class="w-full max-w-xl"
-                >
+        <header class="border-b-[3px] border-black pb-8">
+            <div class="text-black text-xs mb-3">
+                {{ app()->getLocale() === 'id' ? 'Tentang' : 'About' }}
             </div>
-        @endif
+            <h1 class="text-3xl sm:text-4xl font-bold leading-tight text-black">
+                {{ $judul }}
+            </h1>
+        </header>
 
-        <div class="prose max-w-none leading-snug">
-            {!! app()->getLocale() === 'id'
-                ? $about->content_id
-                : $about->content_en
-            !!}
+        {{-- Isi dari editor CMS; subjudul (h2) diberi garis tebal seperti judul bagian di beranda --}}
+        <div class="prose prose-neutral mt-8 max-w-none text-black/80 leading-relaxed
+            prose-headings:text-black prose-strong:text-black prose-a:text-green-700
+            prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-t-[3px] prose-h2:border-black prose-h2:pt-4 prose-h2:text-xl
+            prose-li:my-2 prose-ol:marker:font-semibold prose-ol:marker:text-black">
+            {!! $konten !!}
         </div>
 
     @else
